@@ -23,9 +23,8 @@ def key_func(data):
     a = data[0] * 10 + data[1]
     b = data[2] * 10 + data[3]
     c = data[4] * 10 + data[5]
-    # prime_factor = (1 if primes[a] else 0) + (1 if primes[b] else 0)
     
-    return 10000*a + 100*b + c + 10**6 * (a + b)
+    return 10000*a + 100*b + c + 10**6 * (a * b)
 
 class GCDDataset(Dataset):
 
