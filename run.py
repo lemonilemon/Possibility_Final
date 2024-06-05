@@ -8,8 +8,8 @@ import argparse
 np.set_printoptions(threshold=np.inf)
 
 import torch
-from ChickenRabbit import ChickenRabbitDataset, eval_split
-# from GCD import GCDDataset, eval_split
+from ChickenRabbit import ChickenRabbitDataset, eval_split as ChickenRabbit_eval_split
+from GCD import GCDDataset, eval_split as GCD_eval_split
 from torch.utils.data.dataloader import DataLoader
 torch.set_printoptions(profile="full")
 
@@ -20,17 +20,25 @@ from itertools import permutations
 
 # -----------------------------------------------------------------------------
 
+Dataset = "ChickenRabbit"
+Rounds = 1
+
+
 def get_config():
     C = CN()
 
     # system
     C.system = CN()
     # TODO: random seed for model can be set here
-    C.system.init_seed = 62 # will change the weight initialization
+    C.system.init_seed = 0# will change the weight initialization
     C.system.work_dir = './test'
 
     # data
-    C.data = ChickenRabbitDataset.get_default_config()
+    if Dataset == "ChickenRabbit":
+        C.data = ChickenRabbitDataset.get_default_config()
+    else:
+        C.data = GCDDataset.get_default_config()
+    print(C.data)
 
     # model
     C.model = GPT.get_default_config()
@@ -38,7 +46,7 @@ def get_config():
     
     # trainer
     C.trainer = Trainer.get_default_config()
-    C.trainer.task = "ChickenRabbit" # or gcd
+    C.trainer.task = Dataset # or gcd
     return C
 
 def batch_end_callback(trainer, model, train_dataset, test_dataset):
@@ -49,8 +57,12 @@ def batch_end_callback(trainer, model, train_dataset, test_dataset):
         # evaluate both the train and test acc
         model.eval()
         with torch.no_grad():
-            train_mean = eval_split(trainer.device, model, train_dataset)
-            test_mean  = eval_split(trainer.device, model, test_dataset)
+            if Dataset == "ChickenRabbit":
+                train_mean = ChickenRabbit_eval_split(trainer.device, model, train_dataset)
+                test_mean  = ChickenRabbit_eval_split(trainer.device, model, test_dataset)
+            else:
+                train_mean = GCD_eval_split(trainer.device, model, train_dataset)
+                test_mean  = GCD_eval_split(trainer.device, model, test_dataset)
         print(f'the mean of train and test are {train_mean}, {test_mean}')
         # save the model and terminate the training
         if test_mean >= 0.9:
@@ -64,8 +76,8 @@ def batch_end_callback(trainer, model, train_dataset, test_dataset):
     return -1
 
 # -----------------------------------------------------------------------------
-
 def run():
+
     config = get_config()
     setup_logging(config)
 
@@ -73,8 +85,12 @@ def run():
     set_seed(config.system.init_seed)
 
     # TODO: try different seed to adjust the data order of train/test-set
-    train_dataset = ChickenRabbitDataset(config.data, split='train', seed=0)
-    test_dataset  = ChickenRabbitDataset(config.data, split='test', seed=0)
+    if Dataset == "ChickenRabbit":
+        train_dataset = ChickenRabbitDataset(config.data, split='train', seed=0)
+        test_dataset  = ChickenRabbitDataset(config.data, split='test', seed=0)
+    else:
+        train_dataset = GCDDataset(config.data, split='train', seed=0)
+        test_dataset  = GCDDataset(config.data, split='test', seed=0)
 
     # set the correct vocab size: 10, block size: chickenrabbit -> 10, gcd -> 6
     config.model.vocab_size = train_dataset.get_vocab_size()
@@ -88,10 +104,13 @@ def run():
     else:
         print('It cannot reach 0.9 acc within max_iteration steps...')
 
+
 if __name__ == '__main__': 
     parser = argparse.ArgumentParser(description="Runner with arguments")
-    parser.add_argument("Dataset", help="Which dataset to use")
-    parser.add_argument("Rounds", help="Number of rounds")
+    parser.add_argument("Dataset", help="Which dataset to use", type=str, choices={"ChickenRabbit", "GCD"})
+    parser.add_argument("Rounds", help="Number of rounds", type=int)
     args = parser.parse_args()
-    print(args.Dataset, args.Rounds)
-    
+    Dataset = args.Dataset
+    Rounds = args.Rounds
+    for iteration in range(Rounds):
+        run()

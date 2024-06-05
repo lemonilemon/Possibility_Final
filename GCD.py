@@ -14,7 +14,6 @@ from torch.utils.data.dataloader import DataLoader
 torch.set_printoptions(profile="full")
 
 from mingpt.utils import set_seed, setup_logging, CfgNode as CN
-import setting
 import time
 
 class GCDDataset(Dataset):
