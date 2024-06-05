@@ -46,7 +46,28 @@ class ChickenRabbitDataset(Dataset):
         perm = torch.tensor(data, dtype=torch.long)
 
         num_test = min(int(len(perm)*0.2), 500) # 20% of the whole dataset, or only up to 500
-        self.ixes = perm[:num_test] if split == 'test' else perm[num_test:]
+
+        test_data = perm[:num_test]
+        train_data = perm[num_test:]
+
+        # Data order
+        train_data = train_data.tolist()
+
+        def getkeys(lst):
+            a = lst[0] * 100 + lst[1] * 10 + lst[2]
+            b = lst[3] * 100 + lst[4] * 10 + lst[5]
+            x = lst[6] * 10 + lst[7]
+            y = lst[8] * 10 + lst[9]
+            return max(x, y)
+        train_data.sort(key = lambda lst: getkeys(lst))
+
+
+
+        print(train_data)
+        train_data = torch.tensor(train_data, dtype=torch.long)
+
+        self.ixes = test_data if split == 'test' else train_data
+
 
     def get_vocab_size(self):
         return 10 # digits 0..9

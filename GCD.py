@@ -73,6 +73,20 @@ class GCDDataset(Dataset):
         test_data = test_data + data[:num_test]
         train_data = train_data + data[num_test:]
 
+        def getnumbers(lst):
+            a = lst[0] * 10 + lst[1]
+            b = lst[2] * 10 + lst[3]
+            c = lst[4] * 10 + lst[5]
+            return (a, b, c)
+
+        def getkey(lst):
+            a, b, c = getnumbers(lst)
+            return a * b
+        
+        train_data.sort()
+        train_data.sort(key=lambda x:getkey(x), reverse = True)
+        print(train_data)
+
         test_data = torch.tensor(test_data, dtype=torch.long)
         train_data = torch.tensor(train_data, dtype=torch.long)
         
