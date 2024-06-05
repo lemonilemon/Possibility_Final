@@ -7,8 +7,8 @@ import nltk
 np.set_printoptions(threshold=np.inf)
 
 import torch
-from ChickenRabbit import ChickenRabbitDataset, eval_split
-# from GCD import GCDDataset, eval_split
+# from ChickenRabbit import ChickenRabbitDataset, eval_split
+from GCD import GCDDataset, eval_split
 from torch.utils.data.dataloader import DataLoader
 torch.set_printoptions(profile="full")
 
@@ -25,11 +25,11 @@ def get_config():
     # system
     C.system = CN()
     # TODO: random seed for model can be set here
-    C.system.init_seed = 62 # will change the weight initialization
+    C.system.init_seed = 0 # will change the weight initialization
     C.system.work_dir = './test'
 
     # data
-    C.data = ChickenRabbitDataset.get_default_config()
+    C.data = GCDDataset.get_default_config()
 
     # model
     C.model = GPT.get_default_config()
@@ -37,7 +37,7 @@ def get_config():
     
     # trainer
     C.trainer = Trainer.get_default_config()
-    C.trainer.task = "ChickenRabbit" # or gcd
+    C.trainer.task = "gcd" # or gcd
     return C
 
 def batch_end_callback(trainer, model, train_dataset, test_dataset):
@@ -65,7 +65,7 @@ def batch_end_callback(trainer, model, train_dataset, test_dataset):
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-
+    
     config = get_config()
     setup_logging(config)
 
@@ -73,8 +73,10 @@ if __name__ == '__main__':
     set_seed(config.system.init_seed)
 
     # TODO: try different seed to adjust the data order of train/test-set
-    train_dataset = ChickenRabbitDataset(config.data, split='train', seed=0)
-    test_dataset  = ChickenRabbitDataset(config.data, split='test', seed=0)
+    train_dataset = GCDDataset(config.data, split='train', seed=0)
+    with open(f"train_data.txt", "w", encoding="utf-8") as f:
+        print(f"{train_dataset.ixes}", file=f)
+    test_dataset  = GCDDataset(config.data, split='test', seed=0)
 
     # set the correct vocab size: 10, block size: chickenrabbit -> 10, gcd -> 6
     config.model.vocab_size = train_dataset.get_vocab_size()

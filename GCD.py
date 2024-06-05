@@ -5,6 +5,7 @@ import numpy as np
 import random
 import nltk
 import math
+import functools
 
 np.set_printoptions(threshold=np.inf)
 
@@ -14,8 +15,17 @@ from torch.utils.data.dataloader import DataLoader
 torch.set_printoptions(profile="full")
 
 from mingpt.utils import set_seed, setup_logging, CfgNode as CN
-import setting
+# import setting
 import time
+
+primes = [False, False] + [True] * 98
+def key_func(data):
+    a = data[0] * 10 + data[1]
+    b = data[2] * 10 + data[3]
+    c = data[4] * 10 + data[5]
+    # prime_factor = (1 if primes[a] else 0) + (1 if primes[b] else 0)
+    
+    return 10000*a + 100*b + c + 10**6 * (a + b)
 
 class GCDDataset(Dataset):
 
@@ -73,6 +83,14 @@ class GCDDataset(Dataset):
         num_test = min(int(len(data)*0.2), 500) - len(test_data) # 20% of the whole dataset, or only up to 500
         test_data = test_data + data[:num_test]
         train_data = train_data + data[num_test:]
+
+        # custom sorting zone
+        for i in range(2, 100):
+            for j in range(2, i):
+                if i % j == 0:
+                    primes[i] = False
+        train_data = sorted(train_data, key=key_func, reverse=True)
+        # END of custom sorting zone
 
         test_data = torch.tensor(test_data, dtype=torch.long)
         train_data = torch.tensor(train_data, dtype=torch.long)
