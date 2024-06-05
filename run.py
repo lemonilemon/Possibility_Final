@@ -92,6 +92,9 @@ def run():
         train_dataset = GCDDataset(config.data, split='train', seed=0)
         test_dataset  = GCDDataset(config.data, split='test', seed=0)
 
+    with open(f"train_data.txt", "w", encoding="utf-8") as f:
+        print(f"{train_dataset.ixes}", file=f)
+
     # set the correct vocab size: 10, block size: chickenrabbit -> 10, gcd -> 6
     config.model.vocab_size = train_dataset.get_vocab_size()
     config.model.block_size = train_dataset.get_block_size()

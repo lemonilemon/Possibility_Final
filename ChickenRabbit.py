@@ -53,19 +53,35 @@ class ChickenRabbitDataset(Dataset):
         # Data order
         train_data = train_data.tolist()
 
-        def getkeys(lst):
+        cluster_size = 100
+
+        def getkeys1(lst):
             a = lst[0] * 100 + lst[1] * 10 + lst[2]
             b = lst[3] * 100 + lst[4] * 10 + lst[5]
             x = lst[6] * 10 + lst[7]
             y = lst[8] * 10 + lst[9]
-            return max(x, y)
-        train_data.sort(key = lambda lst: getkeys(lst))
+            return b % max(max(x, y), 1) * a
+        train_data.sort(key = lambda lst: getkeys1(lst), reverse=False)
 
+        clusters = [train_data[i: i + cluster_size] for i in range(0, len(train_data), cluster_size)]
+        #print(clusters)
+        def getkeys2(lst):
+            a = lst[0] * 100 + lst[1] * 10 + lst[2]
+            b = lst[3] * 100 + lst[4] * 10 + lst[5]
+            x = lst[6] * 10 + lst[7]
+            y = lst[8] * 10 + lst[9]
+            return a
 
+        train_data = []
+        for cluster in clusters:
+            cluster.sort(key = lambda lst: getkeys2(lst), reverse=False)
+            train_data.extend(cluster)
 
-        print(train_data)
+        
+
         train_data = torch.tensor(train_data, dtype=torch.long)
 
+        # print(train_data)
         self.ixes = test_data if split == 'test' else train_data
 
 
