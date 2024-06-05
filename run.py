@@ -4,6 +4,7 @@ import json
 import numpy as np
 import random
 import nltk
+import argparse
 np.set_printoptions(threshold=np.inf)
 
 import torch
@@ -64,8 +65,7 @@ def batch_end_callback(trainer, model, train_dataset, test_dataset):
 
 # -----------------------------------------------------------------------------
 
-if __name__ == '__main__':
-
+def run():
     config = get_config()
     setup_logging(config)
 
@@ -88,5 +88,10 @@ if __name__ == '__main__':
     else:
         print('It cannot reach 0.9 acc within max_iteration steps...')
 
-
+if __name__ == '__main__': 
+    parser = argparse.ArgumentParser(description="Runner with arguments")
+    parser.add_argument("Dataset", help="Which dataset to use")
+    parser.add_argument("Rounds", help="Number of rounds")
+    args = parser.parse_args()
+    print(args.Dataset, args.Rounds)
     
